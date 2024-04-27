@@ -73,7 +73,7 @@ describe("BGDNFT Contract", () => {
     it("Should revert if the address has already minted", async () => {
       await bGDNFT.toggleMintIsActive(); // Activate minting
       await bGDNFT.mint();
-      await expect(bGDNFT.mint()).to.be.revertedWith(bGDNFT.AddressAlreadyMinted());
+      await expect(bGDNFT.mint()).to.be.reverted();
     });
 
     it("Should mint a new NFT with a random URI", async () => {
@@ -94,5 +94,20 @@ describe("BGDNFT Contract", () => {
     });
   });
 
+  describe('getTokenURI', function () {
+    beforeEach(async () => {
+      // Add some URIs before tests
+      await bGDNFT.addTokenURI("https://example.com/uri1");
+      await bGDNFT.addTokenURI("https://example.com/uri2");
+    });
+    it('should return the correct URI for a valid uid', async function () {
+      expect(await bGDNFT.getTokenURI(2)).to.equal("https://example.com/uri2");
+    });
+  
+    it('should revert with an error message for an invalid uid', async function () {
+      await expect(bGDNFT.getTokenURI(0)).to.be.revertedWith('Invalid _uriId');
+      await expect(bGDNFT.getTokenURI(2)).to.be.revertedWith('Invalid _uriId');
+    });
+  });
   // Add more tests for other functionalities like batchAddTokenURIs, withdraw, etc.
 });

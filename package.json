@@ -19,6 +19,7 @@
     "eslint-plugin-prettier": "^4.2.1",
     "ethers": "^5.7.1",
     "hardhat": "^2.22.2",
+    "hardhat-verify": "^1.0.0",
     "husky": "^7.0.4",
     "prettier": "^2.7.1",
     "prettier-plugin-solidity": "^1.0.0-beta.24"

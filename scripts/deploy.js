@@ -1,10 +1,22 @@
-import { ethers } from "hardhat";
+const { ethers } = require('hardhat');
 
-async function main() {}
+async function main() {
+  // Get the contract factory for the BGDNFT contract
+  const BGDNFT = await ethers.getContractFactory('BGDNFT');
 
-// We recommend this pattern to be able to use async/await everywhere
-// and properly handle errors.
-main().catch((error) => {
-  console.error(error);
-  process.exitCode = 1;
-});
+  // Deploy the contract with the name and symbol arguments
+  const bgdnft = await BGDNFT.deploy('BigGreenDildo', 'BGD');
+
+  // Wait for the contract to be deployed
+  await bgdnft.deployed();
+
+  // Log the contract address
+  console.log('Contract deployed to:', bgdnft.address);
+}
+
+main()
+ .then(() => process.exit(0))
+ .catch((error) => {
+    console.error(error);
+    process.exit(1);
+  });

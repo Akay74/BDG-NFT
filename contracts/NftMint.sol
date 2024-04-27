@@ -9,6 +9,9 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract BGDNFT is ERC721URIStorage, Ownable, ReentrancyGuard {
   using Counters for Counters.Counter;
 
+  // Public variable for mint price in wei
+  uint256 public mintPrice = 0.0015 ether;
+
   // Counter to track minted token IDs
   Counters.Counter private _tokenIdCounter;
 
@@ -26,9 +29,15 @@ contract BGDNFT is ERC721URIStorage, Ownable, ReentrancyGuard {
 
   // Event emitted whenever the toggleMintIsActive method is executed
   event EnableMinting();
+
+  // Event emitted when the mint price is changed
+  event UpdatedMintPrice(uint256 oldPrice, uint256 newPrice);
   
   // Event emitted whenever the mint function is executed
   event MintedNft(address indexed minter, uint256 tokenId);
+
+  // Event emitted whenever the owner withdraws funds from the contract
+  event Withdrawal(address indexed owner, uint256 amount);
 
   // Custom error to revert if an address has already minted an NFT
   error AddressAlreadyMinted();
@@ -82,13 +91,26 @@ contract BGDNFT is ERC721URIStorage, Ownable, ReentrancyGuard {
   }
 
   /**
+   * @notice Function to update the mint price in wei
+   * @dev Only callable by the contract owner
+   * @param newPrice The new price for minting an NFT in wei
+   */
+  function updateMintPrice(uint256 newPrice) public onlyOwner {
+    uint256 oldPrice = mintPrice;
+    mintPrice = newPrice;
+
+    emit UpdatedMintPrice(oldPrice, newPrice);
+  }
+
+  /**
    * @notice Function to mint a new NFT with a randomly selected URI
    * @dev Checks for prior mints, generates a random number, selects a URI from the mapping,
    *      and mints the NFT with the associated URI.
    * @return tokenId The tokenId of the newly minted NFT
    */
-  function mint() public nonReentrant returns (uint256) {
+  function mint() payable public nonReentrant returns (uint256) {
     require(mintIsActive, "Minting is not currently active");
+    require(msg.value >= mintPrice, "Insufficient funds sent for mint");
     if (minted[msg.sender]) {
       revert AddressAlreadyMinted();
     }
@@ -116,7 +138,10 @@ contract BGDNFT is ERC721URIStorage, Ownable, ReentrancyGuard {
    * @dev Only callable by the contract owner
    */
   function withdraw() public onlyOwner {
+    uint256 balance = address(this).balance;
     payable(msg.sender).transfer(address(this).balance);
+
+    emit Withdrawal(msg.sender, balance);
   }
 
   /**
@@ -127,7 +152,7 @@ contract BGDNFT is ERC721URIStorage, Ownable, ReentrancyGuard {
   */
   function getTokenURI(uint256 uid) public view onlyOwner returns (string memory) {
       require(uid > 0 && uid <= _uriId, "Invalid _uriId");
-      return _tokenURIs[_uriId];
+      return _tokenURIs[uid];
   }
 
   /**
@@ -152,4 +177,5 @@ contract BGDNFT is ERC721URIStorage, Ownable, ReentrancyGuard {
     // Ensure the generated number is within the desired range (1 to 1000, inclusive)
     return (randomValue % _uriId) + 1;
   }
+
 }
